@@ -1,0 +1,338 @@
+# ============================================
+# ABC Bank Digital Onboarding System
+# .gitignore for Java/Spring Boot/Maven
+# ============================================
+
+# ============================================
+# Maven
+# ============================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ============================================
+# Java
+# ============================================
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# ============================================
+# Spring Boot
+# ============================================
+spring-boot-*.log
+*.log
+logs/
+application-local.yml
+application-local.properties
+
+# ============================================
+# IDE - IntelliJ IDEA
+# ============================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# ============================================
+# IDE - Eclipse
+# ============================================
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
+
+# ============================================
+# IDE - VS Code
+# ============================================
+.vscode/
+*.code-workspace
+.history/
+
+# ============================================
+# IDE - NetBeans
+# ============================================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# ============================================
+# Operating System Files
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Security & Secrets
+# ============================================
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+*.crt
+*.cer
+*.pfx
+.env
+.env.local
+.env.*.local
+secrets/
+credentials/
+*.credentials
+application-secrets.yml
+application-secrets.properties
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ============================================
+# Docker
+# ============================================
+docker-compose.override.yml
+.docker/
+
+# ============================================
+# Kubernetes
+# ============================================
+k8s/overlays/*/secrets.yaml
+k8s/secrets/
+*.secret.yaml
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.tox/
+junit.xml
+test-results/
+coverage/
+
+# ============================================
+# Build Tools
+# ============================================
+.gradle
+**/build/
+!src/**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# ============================================
+# Package Files
+# ============================================
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ============================================
+# Logs
+# ============================================
+*.log
+logs/
+*.log.*
+*.log.gz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Backup Files
+# ============================================
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# ============================================
+# Application Specific
+# ============================================
+
+# MinIO local storage
+.minio.sys/
+minio-data/
+
+# Redis dumps
+dump.rdb
+
+# Application logs
+onboarding.log
+onboarding-*.log
+audit.log
+audit-*.log
+
+# H2 Database (if used for testing)
+*.h2.db
+*.trace.db
+*.lock.db
+
+# Flyway
+.flywayhistory
+
+# JaCoCo
+jacoco.exec
+jacoco-resources/
+
+# SonarQube
+.sonar/
+.scannerwork/
+
+# OWASP Dependency Check
+dependency-check-report.html
+dependency-check-report.json
+dependency-check-report.xml
+
+# Trivy
+trivy-results.sarif
+
+# Node.js (if frontend is added later)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Python (if scripts are added)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv
+
+# ============================================
+# GraalVM Native Image
+# ============================================
+*.so
+*.dylib
+*.dll
+*.exe
+native-image/
+graalvm/
+
+# ============================================
+# Performance & Profiling
+# ============================================
+*.hprof
+*.prof
+*.jfr
+*.jfr.*
+heap.bin
+hs_err_*.log
+
+# ============================================
+# Documentation
+# ============================================
+# Uncomment if you want to ignore generated docs
+# docs/_build/
+# docs/.doctrees/
+# site/
+
+# ============================================
+# Custom - Project Specific
+# ============================================
+# Add any project-specific ignore patterns below

@@ -1,0 +1,287 @@
+spring:
+  application:
+    name: abc-onboarding-service
+    version: 1.0.0
+
+  profiles:
+    active: production
+
+  # Database Configuration - Use environment variables
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-service:5432/onboarding}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis-service}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 2000ms
+
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq-service}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:admin}
+    password: ${SPRING_RABBITMQ_PASSWORD}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 5
+          multiplier: 2
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+        prefetch: 10
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    whitelabel:
+      enabled: false
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 20s
+
+# Management & Monitoring
+management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:health,info,metrics,prometheus}
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:when-authorized}
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: production
+
+# Storage Configuration (used by StorageConfig.java)
+storage:
+  minio:
+    endpoint: ${STORAGE_MINIO_ENDPOINT:http://minio-service:9000}
+    access-key: ${STORAGE_MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${STORAGE_MINIO_SECRET_KEY}
+    bucket-name: ${STORAGE_MINIO_BUCKET:onboarding-documents}
+  s3:
+    region: ${STORAGE_S3_REGION:us-east-1}
+    access-key: ${STORAGE_S3_ACCESS_KEY:}
+    secret-key: ${STORAGE_S3_SECRET_KEY:}
+    endpoint: ${STORAGE_S3_ENDPOINT:}
+    bucket-name: ${STORAGE_S3_BUCKET:}
+
+# Application-specific configuration
+onboarding:
+  # Storage Configuration
+  storage:
+    type: ${STORAGE_TYPE:s3}
+
+  # Notification Configuration
+  notification:
+    type: ${NOTIFICATION_TYPE:rabbitmq}
+    email:
+      enabled: ${NOTIFICATION_EMAIL_ENABLED:true}
+      from: ${NOTIFICATION_EMAIL_FROM:noreply@abcbank.com}
+      smtp:
+        host: ${NOTIFICATION_EMAIL_SMTP_HOST:}
+        port: ${NOTIFICATION_EMAIL_SMTP_PORT:587}
+        username: ${NOTIFICATION_EMAIL_SMTP_USERNAME:}
+        password: ${NOTIFICATION_EMAIL_SMTP_PASSWORD:}
+        tls: true
+    sms:
+      enabled: ${NOTIFICATION_SMS_ENABLED:true}
+      provider: ${NOTIFICATION_SMS_PROVIDER:twilio}
+      from: ${NOTIFICATION_SMS_FROM:}
+
+  # Encryption Configuration
+  encryption:
+    algorithm: AES/GCM/NoPadding
+    key-size: 256
+    key: ${ENCRYPTION_KEY}
+
+  # JWT Configuration
+  jwt:
+    secret: ${JWT_SECRET}
+    expiry:
+      applicant: ${JWT_EXPIRY_APPLICANT:900000}      # 15 minutes
+      officer: ${JWT_EXPIRY_OFFICER:1800000}         # 30 minutes
+      admin: ${JWT_EXPIRY_ADMIN:600000}              # 10 minutes
+      refresh: ${JWT_EXPIRY_REFRESH:2592000000}      # 30 days
+
+  # Session Configuration
+  session:
+    timeout:
+      idle: ${SESSION_TIMEOUT_IDLE:900000}                         # 15 minutes
+      officer-absolute: ${SESSION_TIMEOUT_OFFICER:28800000}        # 8 hours
+      admin-absolute: ${SESSION_TIMEOUT_ADMIN:14400000}            # 4 hours
+    max-concurrent: ${SESSION_MAX_CONCURRENT:3}
+    cleanup:
+      enabled: true
+      cron: "0 */15 * * * *"  # Every 15 minutes
+
+  # Rate Limiting Configuration
+  rate-limit:
+    enabled: true
+    create-application:
+      per-ip: ${RATE_LIMIT_CREATE_APP_PER_IP:3}
+      window: ${RATE_LIMIT_CREATE_APP_WINDOW:3600000}        # 1 hour
+    send-otp:
+      per-application: ${RATE_LIMIT_SEND_OTP_PER_APP:5}
+      per-ip: ${RATE_LIMIT_SEND_OTP_PER_IP:10}
+      window: ${RATE_LIMIT_SEND_OTP_WINDOW:3600000}
+    verify-otp:
+      per-application: ${RATE_LIMIT_VERIFY_OTP_PER_APP:3}
+      per-ip: ${RATE_LIMIT_VERIFY_OTP_PER_IP:10}
+      window: ${RATE_LIMIT_VERIFY_OTP_WINDOW:3600000}
+    login:
+      per-username: ${RATE_LIMIT_LOGIN_PER_USERNAME:5}
+      per-ip: ${RATE_LIMIT_LOGIN_PER_IP:10}
+      window: ${RATE_LIMIT_LOGIN_WINDOW:900000}              # 15 minutes
+
+  # OTP Configuration
+  otp:
+    length: ${OTP_LENGTH:6}
+    expiry-minutes: ${OTP_EXPIRY_MINUTES:10}
+    max-attempts: ${OTP_MAX_ATTEMPTS:3}
+    cleanup:
+      enabled: true
+      cron: "0 0 * * * *"  # Every hour
+
+  # Application Review Configuration
+  review:
+    auto-approve:
+      enabled: ${REVIEW_AUTO_APPROVE_ENABLED:false}
+      score-threshold: ${REVIEW_AUTO_APPROVE_THRESHOLD:95}
+    sla:
+      pending-to-under-review: ${REVIEW_SLA_PENDING:PT24H}
+      under-review-to-decision: ${REVIEW_SLA_REVIEW:PT48H}
+
+  # GDPR Configuration
+  gdpr:
+    data-retention-days: ${GDPR_DATA_RETENTION_DAYS:2555}  # ~7 years
+    export-format: json
+    anonymization:
+      enabled: true
+      delay-days: ${GDPR_ANONYMIZATION_DELAY:30}
+
+  # Security Configuration
+  security:
+    cors:
+      allowed-origins: ${SECURITY_CORS_ALLOWED_ORIGINS:https://onboarding.abcbank.com}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+    csrf:
+      enabled: false
+    content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';"
+
+# Logging Configuration
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:WARN}
+    com.abcbank.onboarding: ${LOGGING_LEVEL_COM_ABCBANK:INFO}
+    org.springframework.web: WARN
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.data.redis: WARN
+    org.springframework.amqp: WARN
+  pattern:
+    console: ${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n}
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [%X{traceId}] - %msg%n"
+  file:
+    name: /var/log/onboarding/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 1GB
+
+# Actuator Info
+info:
+  app:
+    name: ${spring.application.name}
+    version: ${spring.application.version}
+    description: ABC Bank Digital Onboarding System
+    environment: production

@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: abc-onboarding-dev
+
+namePrefix: dev-
+
+commonLabels:
+  environment: dev
+
+bases:
+  - ../../base
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - configmap-patch.yaml
+
+images:
+  - name: onboarding-app
+    newTag: dev-latest
+
+replicas:
+  - name: onboarding-app
+    count: 1

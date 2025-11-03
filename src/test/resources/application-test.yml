@@ -1,0 +1,21 @@
+spring:
+  flyway:
+    enabled: false  # Let JPA create-drop handle schema for tests
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    listener:
+      simple:
+        auto-startup: false  # Disable @RabbitListener auto-start for tests
+
+  task:
+    execution:
+      enabled: true  # Enable async processing for RabbitMQ tests
+
+logging:
+  level:
+    root: WARN
+    com.abcbank.onboarding: DEBUG
+    org.testcontainers: INFO
+    org.springframework: WARN

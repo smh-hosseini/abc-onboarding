@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- ============================================== -->
+    <!-- Properties and Variables                       -->
+    <!-- ============================================== -->
+    <property name="LOG_PATH" value="${LOG_PATH:-logs}"/>
+    <property name="SERVICE_NAME" value="abc-bank-onboarding"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"/>
+
+    <!-- ============================================== -->
+    <!-- Console Appender (Development)                 -->
+    <!-- ============================================== -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ============================================== -->
+    <!-- File Appender (Application Logs)               -->
+    <!-- ============================================== -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/onboarding.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Custom fields for structured logging -->
+            <customFields>{"service":"${SERVICE_NAME}","environment":"${SPRING_PROFILES_ACTIVE:-default}"}</customFields>
+            <!-- Include caller data for debugging (disable in production for performance) -->
+            <includeCallerData>false</includeCallerData>
+            <!-- Include MDC (Mapped Diagnostic Context) -->
+            <includeMdc>true</includeMdc>
+            <!-- Include context name -->
+            <includeContext>true</includeContext>
+            <!-- Include stack traces -->
+            <includeStackTrace>true</includeStackTrace>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily rollover -->
+            <fileNamePattern>${LOG_PATH}/onboarding-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- Keep 30 days of history -->
+            <maxHistory>30</maxHistory>
+            <!-- Maximum size of all log files: 10GB -->
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- Async wrapper for better performance -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${SERVICE_NAME}"}</customFields>
+            <includeMdc>true</includeMdc>
+        </encoder>
+    </appender>
+
+    <!-- ============================================== -->
+    <!-- Audit Log Appender (7-year retention)          -->
+    <!-- ============================================== -->
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/audit.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Custom fields for audit logging -->
+            <customFields>{"service":"${SERVICE_NAME}","log_type":"audit","environment":"${SPRING_PROFILES_ACTIVE:-default}"}</customFields>
+            <!-- Always include caller data for audit logs -->
+            <includeCallerData>true</includeCallerData>
+            <includeMdc>true</includeMdc>
+            <includeContext>true</includeContext>
+            <includeStackTrace>true</includeStackTrace>
+
+            <!-- GDPR-compliant logging: Never log PII -->
+            <!-- PII should be hashed or masked before logging -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <version>version</version>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <levelValue>level_value</levelValue>
+            </fieldNames>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily rollover -->
+            <fileNamePattern>${LOG_PATH}/audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- Keep 7 years of audit history (2555 days) for compliance -->
+            <maxHistory>2555</maxHistory>
+            <!-- Maximum size of all audit log files: 100GB -->
+            <totalSizeCap>100GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ============================================== -->
+    <!-- Async Wrappers for Performance                 -->
+    <!-- ============================================== -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <appender name="ASYNC_AUDIT_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="AUDIT_FILE"/>
+        <queueSize>512</queueSize>
+        <!-- Never discard audit logs -->
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- ============================================== -->
+    <!-- Audit Logger (Separate from Application Logs) -->
+    <!-- ============================================== -->
+    <logger name="AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_AUDIT_FILE"/>
+        <!-- Also output to console in dev -->
+        <springProfile name="dev,local">
+            <appender-ref ref="CONSOLE"/>
+        </springProfile>
+    </logger>
+
+    <!-- ============================================== -->
+    <!-- Package-specific Log Levels                    -->
+    <!-- ============================================== -->
+
+    <!-- Application Packages -->
+    <logger name="com.abcbank.onboarding" level="INFO"/>
+
+    <!-- Domain Layer - Business Logic -->
+    <logger name="com.abcbank.onboarding.domain" level="DEBUG"/>
+
+    <!-- Application Layer - Use Cases -->
+    <logger name="com.abcbank.onboarding.application" level="DEBUG"/>
+
+    <!-- Adapter Layer - External Interfaces -->
+    <logger name="com.abcbank.onboarding.adapter" level="INFO"/>
+
+    <!-- Infrastructure Layer -->
+    <logger name="com.abcbank.onboarding.infrastructure" level="INFO"/>
+
+    <!-- Security and Authentication -->
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.security.web.authentication" level="DEBUG"/>
+    <logger name="org.springframework.security.oauth2" level="DEBUG"/>
+
+    <!-- Database and JPA -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="org.springframework.jdbc.core" level="DEBUG"/>
+    <logger name="org.flywaydb" level="INFO"/>
+
+    <!-- HTTP and Web -->
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="DEBUG"/>
+
+    <!-- Redis -->
+    <logger name="org.springframework.data.redis" level="INFO"/>
+
+    <!-- RabbitMQ -->
+    <logger name="org.springframework.amqp" level="INFO"/>
+
+    <!-- Third-party Libraries -->
+    <logger name="io.minio" level="INFO"/>
+    <logger name="software.amazon.awssdk" level="WARN"/>
+    <logger name="com.google.i18n.phonenumbers" level="WARN"/>
+
+    <!-- ============================================== -->
+    <!-- Root Logger                                    -->
+    <!-- ============================================== -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </root>
+
+    <!-- ============================================== -->
+    <!-- Spring Profile-specific Configurations        -->
+    <!-- ============================================== -->
+
+    <!-- Development Profile -->
+    <springProfile name="dev,local">
+        <logger name="com.abcbank.onboarding" level="DEBUG"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Production Profile -->
+    <springProfile name="prod">
+        <logger name="com.abcbank.onboarding" level="INFO"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+        <root level="WARN">
+            <appender-ref ref="ASYNC_FILE"/>
+            <!-- Disable console logging in production -->
+        </root>
+    </springProfile>
+
+    <!-- Test Profile -->
+    <springProfile name="test">
+        <logger name="com.abcbank.onboarding" level="DEBUG"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- ============================================== -->
+    <!-- GDPR Compliance Notes                          -->
+    <!-- ============================================== -->
+    <!--
+    IMPORTANT: GDPR Compliance for Logging
+
+    1. NEVER log PII (Personally Identifiable Information):
+       - Customer names
+       - Email addresses
+       - Phone numbers
+       - BSN (Social Security Numbers)
+       - Addresses
+       - Date of birth
+       - Any other personal data
+
+    2. What CAN be logged:
+       - Application IDs (UUIDs)
+       - Customer IDs (UUIDs)
+       - Status codes
+       - Error codes
+       - Transaction IDs
+       - Hashed/masked values (e.g., "email: a***@b***.com")
+
+    3. Audit Logging Requirements:
+       - User actions (login, logout, data access, data modification)
+       - System events (configuration changes, permission changes)
+       - Security events (failed logins, suspicious activity)
+       - Data exports and deletions (GDPR compliance)
+
+    4. Log Retention:
+       - Application logs: 30 days
+       - Audit logs: 7 years (regulatory requirement)
+       - Ensure secure deletion after retention period
+
+    5. Log Access Control:
+       - Restrict access to logs containing sensitive data
+       - Implement role-based access control (RBAC)
+       - Monitor and audit log access
+
+    6. Examples of GDPR-compliant logging:
+
+       BAD:  logger.info("User john.doe@example.com logged in");
+       GOOD: logger.info("User {} logged in", userId);
+
+       BAD:  logger.info("Application created for BSN: 123456789");
+       GOOD: logger.info("Application created with ID: {}", applicationId);
+
+       BAD:  logger.info("Phone verification sent to +31612345678");
+       GOOD: logger.info("Phone verification sent to user {}", userId);
+
+    7. Structured Logging Best Practices:
+       - Use MDC for trace IDs, user IDs, correlation IDs
+       - Include service name, environment, version
+       - Log business events, not implementation details
+       - Use appropriate log levels (ERROR, WARN, INFO, DEBUG, TRACE)
+
+    8. Security Considerations:
+       - Sanitize all user input before logging
+       - Never log passwords, tokens, or secrets
+       - Mask sensitive data in stack traces
+       - Use secure channels for log transmission
+    -->
+</configuration>

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: onboarding-config
+data:
+  # Production profile
+  SPRING_PROFILES_ACTIVE: "production"
+
+  # Production logging configuration
+  LOGGING_LEVEL_ROOT: "WARN"
+  LOGGING_LEVEL_COM_ABCBANK: "INFO"

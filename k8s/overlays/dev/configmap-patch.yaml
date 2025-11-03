@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: onboarding-config
+data:
+  # Override Spring profile for dev
+  SPRING_PROFILES_ACTIVE: "dev"
+
+  # Dev logging configuration
+  LOGGING_LEVEL_ROOT: "DEBUG"
+  LOGGING_LEVEL_COM_ABCBANK: "TRACE"
